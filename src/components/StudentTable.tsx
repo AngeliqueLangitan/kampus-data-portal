@@ -13,7 +13,7 @@ interface StudentTableProps {
 }
 
 const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) => {
-  const getJurusan Badge = (jurusan: string) => {
+  const getJurusanBadge = (jurusan: string) => {
     const colorMap = {
       "Teknik Informatika": "bg-blue-100 text-blue-800 border-blue-200",
       "Sistem Informasi": "bg-green-100 text-green-800 border-green-200",
