@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-import { toast } from "sonner";
 import StudentForm from "@/components/StudentForm";
 import StudentTable from "@/components/StudentTable";
+import { useStudents } from "@/hooks/useStudents";
 
 export interface Student {
   id: string;
@@ -12,30 +12,8 @@ export interface Student {
 }
 
 const Index = () => {
-  const [students, setStudents] = useState<Student[]>([]);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-
-  const addStudent = (studentData: Omit<Student, "id">) => {
-    const newStudent: Student = {
-      ...studentData,
-      id: Date.now().toString(),
-    };
-    setStudents([...students, newStudent]);
-    toast.success("Data mahasiswa berhasil disimpan!");
-  };
-
-  const updateStudent = (id: string, studentData: Omit<Student, "id">) => {
-    setStudents(students.map(student => 
-      student.id === id ? { ...studentData, id } : student
-    ));
-    setEditingStudent(null);
-    toast.success("Data mahasiswa berhasil diperbarui!");
-  };
-
-  const deleteStudent = (id: string) => {
-    setStudents(students.filter(student => student.id !== id));
-    toast.success("Data mahasiswa berhasil dihapus!");
-  };
+  const { students, loading, addStudent, updateStudent, deleteStudent } = useStudents();
 
   const handleEdit = (student: Student) => {
     setEditingStudent(student);
@@ -44,6 +22,26 @@ const Index = () => {
   const cancelEdit = () => {
     setEditingStudent(null);
   };
+
+  const handleSubmit = (studentData: Omit<Student, "id">) => {
+    if (editingStudent) {
+      updateStudent(editingStudent.id, studentData);
+      setEditingStudent(null);
+    } else {
+      addStudent(studentData);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat data mahasiswa...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -54,7 +52,7 @@ const Index = () => {
               Sistem Manajemen Data Mahasiswa
             </h1>
             <p className="text-gray-600 mt-1">
-              Kelola data mahasiswa dengan mudah dan efisien
+              Kelola data mahasiswa dengan mudah dan efisien menggunakan Firebase
             </p>
           </div>
         </div>
@@ -62,10 +60,7 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
             <StudentForm
-              onSubmit={editingStudent ? 
-                (data) => updateStudent(editingStudent.id, data) : 
-                addStudent
-              }
+              onSubmit={handleSubmit}
               editingStudent={editingStudent}
               onCancelEdit={cancelEdit}
             />
