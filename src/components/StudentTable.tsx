@@ -1,9 +1,10 @@
-
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Edit, Trash2, Users, Search } from "lucide-react";
 import { Student } from "@/pages/Index";
 
 interface StudentTableProps {
@@ -13,6 +14,8 @@ interface StudentTableProps {
 }
 
 const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
   const getJurusanBadge = (jurusan: string) => {
     const colorMap = {
       "Teknik Informatika": "bg-blue-100 text-blue-800 border-blue-200",
@@ -31,6 +34,35 @@ const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) => {
     }
   };
 
+  // Function to get initials from name
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase();
+  };
+
+  // Filter students based on search term
+  const filteredStudents = students.filter(student => {
+    const searchLower = searchTerm.toLowerCase();
+    
+    // Search by NIM
+    if (student.nim.toLowerCase().includes(searchLower)) return true;
+    
+    // Search by jurusan
+    if (student.jurusan.toLowerCase().includes(searchLower)) return true;
+    
+    // Search by nama
+    if (student.nama.toLowerCase().includes(searchLower)) return true;
+    
+    // Search by initials (only for names, not majors)
+    const nameInitials = getInitials(student.nama);
+    if (nameInitials.toLowerCase().includes(searchLower)) return true;
+    
+    return false;
+  });
+
   return (
     <Card className="w-full">
       <CardHeader className="bg-gray-50 border-b border-gray-200">
@@ -38,19 +70,41 @@ const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) => {
           <Users className="w-5 h-5 text-gray-600" />
           Daftar Mahasiswa
           <Badge variant="secondary" className="ml-auto">
-            {students.length} mahasiswa
+            {filteredStudents.length} dari {students.length} mahasiswa
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        {students.length === 0 ? (
+        {/* Search Input */}
+        <div className="p-4 border-b border-gray-200 bg-white">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          {searchTerm && (
+            <p className="text-sm text-gray-500 mt-2">
+              Menampilkan {filteredStudents.length} hasil dari pencarian "{searchTerm}"
+            </p>
+          )}
+        </div>
+
+        {filteredStudents.length === 0 ? (
           <div className="text-center py-12">
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-lg font-medium mb-2">
-              Belum ada data mahasiswa
+              {searchTerm ? "Tidak ada hasil pencarian" : "Belum ada data mahasiswa"}
             </p>
             <p className="text-gray-400">
-              Tambahkan data mahasiswa pertama menggunakan form di sebelah kiri
+              {searchTerm 
+                ? `Tidak ditemukan data yang cocok dengan "${searchTerm}"`
+                : "Tambahkan data mahasiswa pertama menggunakan form di sebelah kiri"
+              }
             </p>
           </div>
         ) : (
@@ -66,7 +120,7 @@ const StudentTable = ({ students, onEdit, onDelete }: StudentTableProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map((student, index) => (
+                {filteredStudents.map((student, index) => (
                   <TableRow key={student.id} className="hover:bg-gray-50 transition-colors duration-150">
                     <TableCell className="font-medium text-gray-600 py-4">
                       {index + 1}
